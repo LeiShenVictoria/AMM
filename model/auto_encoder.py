@@ -111,6 +111,8 @@ class AutoEncoderModel(Seq2SeqModel):
                     output_projection=output_projection,
                     feed_previous=mode == 'test',
                     scope='seq_decoder')
+            # 注意：由于这里autoencodermodel是继承了seq2seqmodel，所以这里的seq_dec_outputs是seq2seqmodel的output
+            # a_decoder和seq2seq_decoder是两个不同的decoder，这里没有融合，只是在loss里增加了，jointly training.
 
     def _build_optimize_ops(self):
         super(AutoEncoderModel, self)._build_optimize_ops()
@@ -127,6 +129,10 @@ class AutoEncoderModel(Seq2SeqModel):
             self.a_weights,
             self._vocab_size(),
             softmax_loss_function=self._sampled_softmax_fn if self.output_projection else None)
+
+        # .minimize() function: This method simply combines calls compute_gradients() and apply_gradients(). 
+        # If you want to process the gradient before applying them call compute_gradients() and 
+        # apply_gradients() explicitly instead of using this function.
 
         self.q_train_op = self.optimizer.minimize(self.q_loss_op)
         self.a_train_op = self.optimizer.minimize(self.a_loss_op)
